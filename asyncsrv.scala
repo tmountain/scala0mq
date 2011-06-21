@@ -38,13 +38,13 @@ object asyncsrv  {
                 poller.poll
                 if (poller.pollin(0)) {
                     val msg = new ZMsg(frontend)
-                    println("Request from client: " + msg)
+                    //println("Request from client: " + msg)
                     backend.sendMsg(msg)
                 }
 
                 if (poller.pollin(1)) {
                     val msg = new ZMsg(backend)
-                    println("Reply from worker: " + msg)
+                    //println("Reply from worker: " + msg)
                     frontend.sendMsg(msg)
                 }
             }
@@ -52,23 +52,15 @@ object asyncsrv  {
         }
     }
 
-    //  Accept a request and reply with the same text a random number of
-    //  times, with random delays between replies.
-    //
+    // Accept a request and reply with the same text
     class ServerWorker(ctx: ZMQ.Context) extends Runnable {
         def run() {
-            val rand = new java.util.Random(System.currentTimeMillis)
             val worker = ctx.socket(ZMQ.XREQ)
             worker.connect("inproc://backend")
             while (true) {
                 //  The DEALER socket gives us the address envelope and message
                 val zmsg = new ZMsg(worker);
-                //  Send 0..4 replies back
-                val replies = rand.nextInt(5);
-                for (reply <- 1 to replies) {
-                    //Thread.sleep (rand.nextInt(1) * 1000)
-                    worker.sendMsg(zmsg)
-                }
+                worker.sendMsg(zmsg)
             }
         }
     }
