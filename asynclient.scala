@@ -23,8 +23,7 @@ object asynclient  {
                 // Tick once per 1/100th of a second pulling in arriving messages
                 for (centitick <- 1 to 100) {
                     //poller.poll(10000)
-                    //poller.poll(100)
-                    poller.poll
+                    poller.poll(100)
                     if (poller.pollin(0)) {
                         val msg = new ZMsg(client)
                         printf("%s : %s\n", identity, msg.bodyToString)
