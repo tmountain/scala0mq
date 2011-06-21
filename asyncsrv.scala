@@ -67,7 +67,6 @@ object asyncsrv  {
 
     //  This main thread simply starts several clients, and a server, and then
     //  waits for the server to finish.
-    //
     def main(args : Array[String]) {
         new Thread(new ServerTask()).start
     }

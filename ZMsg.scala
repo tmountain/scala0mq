@@ -1,8 +1,8 @@
 /*
- * Multipart message class for example applications.
- *
- * @Author:     Giovanni Ruggiero
- * @Email:      giovanni.ruggiero@gmail.com
+* Multipart message class for example applications.
+*
+* @Author:     Giovanni Ruggiero
+* @Email:      giovanni.ruggiero@gmail.com
 */
 
 import org.zeromq.ZMQ.Socket
@@ -10,76 +10,66 @@ import org.zeromq.ZMQ
 import ZHelpers._
 
 class ZMsg {
-	type ZMsg = scala.collection.mutable.ListBuffer[Array[Byte]]
-	private val msgParts = scala.collection.mutable.ListBuffer[Array[Byte]]()
+    type ZMsg = scala.collection.mutable.ListBuffer[Array[Byte]]
+    private val msgParts = scala.collection.mutable.ListBuffer[Array[Byte]]()
+    private val Noflags = 0
+    def this(body: String) = { this(); msgParts += body.getBytes}
+    def this(body: Array[Byte]) = this(new String(body))
+    def this(socket: Socket) = {this(); recv(socket)}
+    def body = msgParts last
+    def body(bodyStr: String) = msgParts.update(msgParts.length -1,bodyStr.getBytes)
+    def address = msgParts head
+    def addressToString = new String(msgParts head)
+    def address(address:String) = {
+        msgParts remove 0
+        address.getBytes +: msgParts
+    }
 
-	private val Noflags = 0
+    def recv(socket: Socket) =  for (frame <- socket.recvAll(0)) msgParts += frame
 
-	def this(body: String) = { this(); msgParts += body.getBytes}
+    def send(socket: Socket) = {
+        val last = msgParts last
 
-	def this(body: Array[Byte]) = this(new String(body))
+        for (frame <- msgParts if frame != last) {
+            socket.send(frame,ZMQ.SNDMORE)
+        }
+        socket.send(last,Noflags)
+    }
 
-	def this(socket: Socket) = {this(); recv(socket)}
+    def length = msgParts.length
+    def size = msgParts.length
 
-	def body = msgParts last
+    def stringToBody(bodyStr: String) = body(bodyStr)
 
-	def body(bodyStr: String) = msgParts.update(msgParts.length -1,bodyStr.getBytes)
+    def bodyToString = new String(body)
 
-	def address = msgParts head
+    def wrap(address:Array[Byte]) = {
+        Array[Byte]() +: msgParts
+        address +: msgParts
+    }
 
-	def addressToString = new String(msgParts head)
+    def unwrap() = {
+        val address = msgParts remove 0
 
-	def address(address:String) = {
-		msgParts remove 0
-		address.getBytes +: msgParts
-	}
+        if (msgParts.head.length == 0)
+            msgParts remove 0
 
-	def recv(socket: Socket) =  for (frame <- socket.recvAll(0)) msgParts += frame
+        address
+    }
 
-	def send(socket: Socket) = {
-		val last = msgParts last
+    def dump = {
+        println(new String("-") * 38)
+        for (msg <- msgParts) {
+            printf("[%d] ",msgParts.length)
+            if (msg.length == 17 && msg(0) == 0)  {
+                // println(decodeUUID(msg).substring(1))
+                println( "UUID " + new String(msg))
+            } else {
+                println(new String(msg))
+            }
+        }
+        println(new String("-") * 38)
+    }
 
-		for (frame <- msgParts if frame != last) {
-			socket.send(frame,ZMQ.SNDMORE)
-		}
-		socket.send(last,Noflags)
-	}
-
-	def length = msgParts.length
-	def size = msgParts.length
-
-	def stringToBody(bodyStr: String) = body(bodyStr)
-
-	def bodyToString = new String(body)
-
-	def wrap(address:Array[Byte]) = {
-		Array[Byte]() +: msgParts
-		address +: msgParts
-	}
-
-	def unwrap() = {
-		val address = msgParts remove 0
-
-		if (msgParts.head.length == 0)
-			msgParts remove 0
-
-		address
-	}
-
-	def dump = {
-    println(new String("-") * 38)
-		for (msg <- msgParts) {
-			printf("[%d] ",msgParts.length)
- 			if (msg.length == 17 && msg(0) == 0)  {
-        // println(decodeUUID(msg).substring(1))
-        println( "UUID " + new String(msg))
-      } else {
-        println(new String(msg))
-      }
-		}
-    println(new String("-") * 38)
-  }
-
-	override def toString = msgParts.mkString("|","|","|")
-
+    override def toString = msgParts.mkString("|","|","|")
 }
