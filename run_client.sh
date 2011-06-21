@@ -1,1 +1,1 @@
-scala -Djava.library.path=/usr/local/lib  -classpath classes:./zmq.jar asynclient
+scala -Djava.library.path=/usr/local/lib  -classpath classes:./zmq.jar rrclient
