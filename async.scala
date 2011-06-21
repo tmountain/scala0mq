@@ -33,7 +33,8 @@ object asyncsrv  {
             while (true) {
                 //  Tick once per second, pulling in arriving messages
                 for (centitick <- 1 to 100) {
-                    poller.poll(10000)
+                    //poller.poll(10000)
+                    poller.poll(100)
                     if (poller.pollin(0)) {
                         val msg = new ZMsg(client)
                         printf("%s : %s\n", identity, msg.bodyToString)
@@ -110,7 +111,7 @@ object asyncsrv  {
                 //  Send 0..4 replies back
                 val replies = rand.nextInt(5);
                 for (reply <- 1 to replies) {
-                    Thread.sleep (rand.nextInt(1) * 1000)
+                    //Thread.sleep (rand.nextInt(1) * 1000)
                     worker.sendMsg(zmsg)
                 }
             }
@@ -121,9 +122,9 @@ object asyncsrv  {
     //  waits for the server to finish.
     //
     def main(args : Array[String]) {
-        val Nclients = 3
-        val clients = List.fill(Nclients)(new Thread(new ClientTask()))
-        clients foreach (_.start)
+        //val Nclients = 3
+        //val clients = List.fill(Nclients)(new Thread(new ClientTask()))
+        //clients foreach (_.start)
         new Thread(new ServerTask()).start
     }
 }
